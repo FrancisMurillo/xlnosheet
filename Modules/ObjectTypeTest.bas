@@ -62,6 +62,16 @@ Public Sub TestPlaceTakeOverride()
     VaseAssert.AssertEqual Value, ObjectType.Take(Key, Empty, Object)
 End Sub
 
+Public Sub TestHasKey()
+    Dim Object As Variant
+    
+    Object = ObjectType.Create
+    Object = ObjectType.Place(1, Empty, Object)
+    
+    VaseAssert.AssertTrue ObjectType.HasKey(1, Object)
+    VaseAssert.AssertFalse ObjectType.HasKey(2, Object)
+End Sub
+
 Public Sub TestMerge()
     Dim LeftObject As Variant, RightObject As Variant, MergeObject As Variant
     

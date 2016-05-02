@@ -31,10 +31,39 @@ Public Function Take(Key As Variant, DefaultValue As Variant, Object As Variant)
     For Index = 0 To UBound(Object)
         Pair = Object(Index)
         PairKey = ArrayUtil.First(Pair)
-        PairValue = ArrayUtil.Last(Pair)
+        
+        If IsObject(Pair(1)) Then
+            Set PairValue = Pair(1)
+        Else
+            PairValue = Pair(1)
+        End If
         
         If PairKey = Key Then
-            Take = PairValue
+            If IsObject(PairValue) Then
+                Set Take = PairValue
+            Else
+                Take = PairValue
+            End If
+            
+            Exit Function
+        End If
+    Next
+End Function
+
+Public Function HasKey(Key As Variant, Object As Variant)
+     If ArrayUtil.IsEmptyArray(Object) Then
+        HasKey = False
+        Exit Function
+    End If
+    
+    Dim Index As Long, Pair As Variant, PairKey As Variant
+    HasKey = False
+    For Index = 0 To UBound(Object)
+        Pair = Object(Index)
+        PairKey = ArrayUtil.First(Pair)
+        
+        If PairKey = Key Then
+            HasKey = True
             Exit Function
         End If
     Next
@@ -77,3 +106,18 @@ Public Function Values(Object As Variant) As Variant
     
     Values = ObjectValues
 End Function
+
+Public Function Pairs(Object As Variant) As Variant
+    Dim ObjectKeys As Variant, ObjectValues As Variant, Index As Long, ObjectKey As Variant
+    
+    ObjectKeys = Keys(Object)
+    ObjectPairs = ArrayUtil.CloneSize(ObjectKeys)
+    
+    For Index = 0 To UBound(ObjectKeys)
+        ObjectKey = ObjectKeys(Index)
+        ObjectPairs(Index) = Array(ObjectKey, Take(ObjectKey, Empty, Object))
+    Next
+    
+    Pairs = ObjectPairs
+End Function
+
