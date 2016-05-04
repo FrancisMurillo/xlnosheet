@@ -7,7 +7,7 @@ Public Function IsNil(Value As Variant)
     ElseIf IsArray(Value) Then
         IsNil = ArrayUtil.IsEmptyArray(Value)
     Else
-        IsNil = (Value = "") Or (Value = Empty)
+        IsNil = (Value = "") Or (Value = Empty) Or (Value = True)
     End If
 End Function
 

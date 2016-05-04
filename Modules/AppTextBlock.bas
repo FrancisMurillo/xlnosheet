@@ -3,21 +3,7 @@ Attribute VB_Name = "AppTextBlock"
 
 Public Const TEXT_PREFIX_KEY As String = "textPrefix"
 
-Public Sub a()
-    Dim CurSheet As Worksheet
-    Set CurSheet = ActiveSheet
-    
-    Dim SampleSheet As Worksheet
-    Set SampleSheet = Worksheets("Sandbox")
-    
-    BuildSourceToTarget AppSnippet.GetSnippets, CurSheet, SampleSheet
-    
-    'Util.DeleteSheet SampleSheet
-End Sub
-
 Public Function BuildSourceToTarget(Snippets As Variant, SourceSheet As Worksheet, Optional TargetSheet As Worksheet)
-    Application.ScreenUpdating = False
-    
     Dim AppProperties As Variant, Blocks As Variant
     AppProperties = AppProperty.GetProperties
     Blocks = GetSheetTextBlocks(AppProperties, SourceSheet)
@@ -29,18 +15,28 @@ Public Function BuildSourceToTarget(Snippets As Variant, SourceSheet As Workshee
 
         BuildBy Snippets, Block, TargetSheet
     Next
-    
-    Application.ScreenUpdating = True
 End Function
 
 Private Function BuildBy(Snippets As Variant, Block As Variant, Sheet As Worksheet) As Variant
     If TextBlockType.GetRowArea(Block) <> Empty Then
         BuildBy = BuildByRowArea(Snippets, Block, Sheet)
+    ElseIf TextBlockType.GetCell(Block) <> Empty Then
+        BuildBy = BuildByCell(Block, Sheet)
     Else
         ' Better reporting might come in handy
         MsgBox "This text block has no target. Please specify a target pattern before building this"
         End
     End If
+End Function
+
+Private Function BuildByCell(Block As Variant, Sheet As Worksheet) As Variant
+    Dim TargetCellAddress As String, BlockCell As Range, TargetCell As Range
+    TargetCellAddress = TextBlockType.GetCell(Block)
+    Set BlockCell = TextBlockType.GetBlock(Block).Columns(1)
+    Set TargetCell = Sheet.Range(TargetCellAddress)
+    
+    BlockCell.Copy TargetCell
+    RenderBlockProperties Block, TargetCell
 End Function
 
 Private Function BuildByRowArea(Snippets As Variant, Block As Variant, Sheet As Worksheet) As Variant
@@ -79,7 +75,7 @@ Private Function BuildByRowArea(Snippets As Variant, Block As Variant, Sheet As 
     Next
     
     'Render properties
-    RenderBlockProperties Block, TempSheet
+    RenderBlockProperties Block, TempSheet.UsedRange
 
     
     ' NOTE: Dirty remove of range
@@ -96,10 +92,9 @@ Private Function BuildByRowArea(Snippets As Variant, Block As Variant, Sheet As 
     Util.DeleteSheet TempSheet
 End Function
 
-Private Function RenderBlockProperties(Block As Variant, Sheet As Worksheet)
-    Dim Index As Long, Pairs As Variant, Rng As Range
+Private Function RenderBlockProperties(Block As Variant, Rng As Range)
+    Dim Index As Long, Pairs As Variant
     Pairs = ObjectType.Pairs(Block)
-    Set Rng = Sheet.UsedRange
     
     Dim Key As Variant, Value As Variant, PropertyName As String, Pair As Variant
     For Index = 0 To UBound(Pairs)
@@ -225,7 +220,7 @@ Private Function ParseBlockStartEndRow(StartRow As Range, EndRow As Range, Prope
     ParseBlockStartEndRow = TextBlockType.Create(BlockProperties, BlockRange)
 End Function
 
-Private Function GetTextSheets(Properties As Variant) As String
+Public Function GetTextSheets(Properties As Variant) As Variant
     GetTextSheets = Util.GetSheetsByNameGlob(GetTextPrefixProperty(Properties) & "*")
 End Function
 
